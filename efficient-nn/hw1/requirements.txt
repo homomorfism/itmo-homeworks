@@ -1,0 +1,6 @@
+torch>=2.4          # tested with torch 2.11.0+cu128
+numpy
+pandas
+scipy
+matplotlib
+nvidia-ml-py        # NVML energy counter

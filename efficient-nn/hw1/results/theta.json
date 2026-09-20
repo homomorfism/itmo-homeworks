@@ -1,0 +1,190 @@
+{
+  "grid": {
+    "S": [
+      32,
+      48,
+      64,
+      112,
+      128,
+      224,
+      256,
+      352,
+      384,
+      400,
+      512
+    ],
+    "B": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      95,
+      98,
+      128,
+      167,
+      256
+    ],
+    "random_S": [
+      48,
+      112,
+      352,
+      400
+    ],
+    "random_B": [
+      95,
+      98,
+      167
+    ],
+    "note": "is_validation = 1 iff S is a random S or B is a random B; theta is fitted on is_validation == 0 only"
+  },
+  "theta": {
+    "t_launch": 1.973662551363314e-05,
+    "bandwidth": 1140406424248.3345,
+    "peak_flops": 12993442062725.459
+  },
+  "theta_additive": {
+    "t_launch": 1.6900880518254776e-05,
+    "bandwidth": 5.389899685091058e+20,
+    "peak_flops": 11687324395270.145
+  },
+  "latency_eval": {
+    "roofline": {
+      "calibration": {
+        "n": 63,
+        "median_abs_rel_err": 0.043115848777874444,
+        "mean_abs_rel_err": 0.05316047655934562,
+        "max_abs_rel_err": 0.17942434427331377,
+        "rmse_log": 0.06587962962151125
+      },
+      "validation": {
+        "n": 69,
+        "median_abs_rel_err": 0.038743399497130904,
+        "mean_abs_rel_err": 0.04381977975189307,
+        "max_abs_rel_err": 0.14522310253064408,
+        "rmse_log": 0.05552669200108866
+      }
+    },
+    "additive": {
+      "calibration": {
+        "n": 63,
+        "median_abs_rel_err": 0.05841746677373805,
+        "mean_abs_rel_err": 0.08904344329925527,
+        "max_abs_rel_err": 0.29397284220345576,
+        "rmse_log": 0.1096300116832733
+      },
+      "validation": {
+        "n": 69,
+        "median_abs_rel_err": 0.053404507781082744,
+        "mean_abs_rel_err": 0.0619298944688443,
+        "max_abs_rel_err": 0.2408549638255051,
+        "rmse_log": 0.07580050288640054
+      }
+    }
+  },
+  "theta_energy": {
+    "p_static": 197.12422466633012,
+    "e_flop": 1.3709584048473413e-11,
+    "e_byte": 0.0,
+    "e_flop_equivalent_pJ_per_byte_if_all_dynamic_energy_were_DRAM": 458.5237386738485,
+    "latency": {
+      "t_launch": 1.973662551363314e-05,
+      "bandwidth": 1140406424248.3345,
+      "peak_flops": 12993442062725.459
+    }
+  },
+  "energy_eval": {
+    "calibration": {
+      "n": 63,
+      "median_abs_rel_err": 0.07537138902851936,
+      "mean_abs_rel_err": 0.08957550642748548,
+      "max_abs_rel_err": 0.42288778961869555,
+      "rmse_log": 0.13275181790132745
+    },
+    "validation": {
+      "n": 69,
+      "median_abs_rel_err": 0.07827080200938119,
+      "mean_abs_rel_err": 0.09261033831520486,
+      "max_abs_rel_err": 0.35038443142158093,
+      "rmse_log": 0.11958157865674413
+    }
+  },
+  "energy_eval_with_measured_latency": {
+    "calibration": {
+      "n": 63,
+      "median_abs_rel_err": 0.06413376999419451,
+      "mean_abs_rel_err": 0.0855293739930737,
+      "max_abs_rel_err": 0.3317353091462145,
+      "rmse_log": 0.11970880824347825
+    },
+    "validation": {
+      "n": 69,
+      "median_abs_rel_err": 0.05686961349896347,
+      "mean_abs_rel_err": 0.07797194545821944,
+      "max_abs_rel_err": 0.24415218751486945,
+      "rmse_log": 0.10279987412472888
+    }
+  },
+  "memory_eval": {
+    "calibration": {
+      "n": 63,
+      "median_abs_rel_err": 0.0001729301590197574,
+      "mean_abs_rel_err": 0.08646125788905899,
+      "max_abs_rel_err": 0.7978131004727157,
+      "rmse_log": 0.3153758077825378
+    },
+    "validation": {
+      "n": 69,
+      "median_abs_rel_err": 0.0009361134872938326,
+      "mean_abs_rel_err": 0.018142740273351225,
+      "max_abs_rel_err": 0.49395708553388606,
+      "rmse_log": 0.0953513816922889
+    },
+    "all_abs_err_MiB_max": 66.09149169921875
+  },
+  "flops_eval": {
+    "formula_vs_profiler(all_ops)": {
+      "n": 132,
+      "median_abs_rel_err": 0.004572422753439831,
+      "mean_abs_rel_err": 0.004566909598525742,
+      "max_abs_rel_err": 0.004573027523178563,
+      "rmse_log": 0.004556524991030687
+    },
+    "formula_conv+linear_only_vs_profiler": {
+      "n": 132,
+      "median_abs_rel_err": 0.0,
+      "mean_abs_rel_err": 0.0,
+      "max_abs_rel_err": 0.0,
+      "rmse_log": 0.0
+    }
+  },
+  "oom_eval": {
+    "measurements_memlimit2gb.csv": {
+      "limit_gb": 2.0,
+      "n_oom_measured": 6,
+      "n_oom_predicted": 6,
+      "agreement": 1.0,
+      "disagreements": []
+    }
+  },
+  "derived": {
+    "t_launch_us": 19.73662551363314,
+    "bandwidth_GBps": 1140.4064242483344,
+    "peak_TFLOPS": 12.993442062725459,
+    "ridge_point_flop_per_byte": 11.393694200986026,
+    "p_static_W": 197.12422466633012,
+    "pJ_per_flop": 13.709584048473413,
+    "saturated_power_W_(p_static + e_flop*peak_flops)": 375.25891070423455,
+    "idle_power_W": 115.06925817163112,
+    "measured_mean_power_W_min_max": [
+      158.89011520156166,
+      341.82233593309354
+    ],
+    "sm_clock_MHz_min_max": [
+      1395,
+      1965
+    ]
+  }
+}
