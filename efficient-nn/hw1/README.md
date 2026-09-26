@@ -64,8 +64,8 @@ Everything comes from one per-layer table (activation sizes in units of B·S² e
 
 | | Formula | Parameters |
 |---|---|---|
-| FLOPs | **17 793 · B·S² + 314 112 · B** (convs: 17 712 B·S² = 2·(1176+3200+1152+512+2304+512) B·S²) | none |
-| Bytes moved | 4·(133 · B·S² + 2148 · B) + 4.18 MB (weights) | none |
+| FLOPs | **17 793 · B·S² + 314 112 · B** (convs: 17 712 B·S² = 2·(1176+3200+1152+512+2304+512) B·S²; head: 2·(512·256 + 256·100) + 256 ReLU + 512 GAP divides = 314 112 B, bias add already inside the 2·in·out) | none |
+| Bytes moved | 4·(133 · B·S² + 2148 · B) + 4·1 045 316 B = 4.18 MB (weights: 1 042 820 parameters + 2 496 BN running stats, all FP32; the 6 int64 `num_batches_tracked` counters are not counted) | none |
 | Memory | **76 · B·S² + 13.75 MB** — peak inside `bn1` (x + conv1-out + bn1-out = 3+8+8 = 19 floats/pixel); constant = 4.18 MB weights + 9.57 MB cuBLAS/cuBLASLt workspace (PyTorch defaults 8320 KiB + 1024 KiB, allocated at the first GEMM and kept) | none |
 | Latency | **Σ_layers max( t₀, Bytes_ℓ/β, FLOPs_ℓ/π )** — per-layer roofline with a launch floor | θ = (t₀, β, π) |
 | Energy | **P₀ · T(S,B,θ) + e_F · FLOPs** (+ e_B · Bytes, see below) | θ_E = (P₀, e_F, e_B) |
