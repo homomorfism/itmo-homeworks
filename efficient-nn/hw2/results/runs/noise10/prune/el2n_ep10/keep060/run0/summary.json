@@ -1,0 +1,9 @@
+{
+  "name": "noise10/prune/el2n_ep10/keep060/run0",
+  "n_train": 30000,
+  "num_params": 11173962,
+  "final_test_acc": 0.7484,
+  "best_test_acc": 0.8427,
+  "final_train_acc": 0.9995712637901306,
+  "wall_minutes": 8.579954596360524
+}

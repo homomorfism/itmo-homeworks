@@ -1,0 +1,9 @@
+{
+  "name": "offset/size20000_off0/run1",
+  "n_train": 20000,
+  "num_params": 11173962,
+  "final_test_acc": 0.938,
+  "best_test_acc": 0.9393,
+  "final_train_acc": 0.9999759197235107,
+  "wall_minutes": 18.2113462527593
+}

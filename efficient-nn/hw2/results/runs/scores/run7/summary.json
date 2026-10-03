@@ -1,0 +1,9 @@
+{
+  "name": "scores/run7",
+  "n_train": 50000,
+  "num_params": 11173962,
+  "final_test_acc": 0.8097,
+  "best_test_acc": 0.8234,
+  "final_train_acc": 0.8634654879570007,
+  "wall_minutes": 3.6833006461461384
+}

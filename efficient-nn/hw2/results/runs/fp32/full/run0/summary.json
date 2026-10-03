@@ -1,0 +1,9 @@
+{
+  "name": "fp32/full/run0",
+  "n_train": 50000,
+  "num_params": 11173962,
+  "final_test_acc": 0.9487,
+  "best_test_acc": 0.95,
+  "final_train_acc": 0.9997115135192871,
+  "wall_minutes": 36.67350809574127
+}

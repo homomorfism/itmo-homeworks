@@ -50,6 +50,7 @@ def setup():
         "axes.edgecolor": GRID,
         "axes.linewidth": 0.8,
         "axes.grid": True,
+        "axes.axisbelow": True,
         "axes.grid.axis": "y",
         "axes.spines.top": False,
         "axes.spines.right": False,
@@ -70,9 +71,9 @@ def setup():
 
 
 def title(ax, text, sub=None):
-    ax.set_title(text, loc="left", color=INK, pad=12 if sub else 6)
+    ax.set_title(text, loc="left", color=INK, pad=20 if sub else 6)
     if sub:
-        ax.text(0.0, 1.015, sub, transform=ax.transAxes, fontsize=8.5, color=INK3,
+        ax.text(0.0, 1.012, sub, transform=ax.transAxes, fontsize=8.5, color=INK3,
                 va="bottom", ha="left")
 
 

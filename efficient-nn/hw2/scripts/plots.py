@@ -149,6 +149,34 @@ def fig_prune(df):
     return nseed
 
 
+def fig_grand_epoch(df):
+    """GraNd at epoch 1 vs epoch 20, on the fractions where both were run."""
+    d = df[df.group == "prune"]
+    if "grand_ep20" not in set(d.method):
+        return
+    fracs = sorted(set(d[d.method == "grand_ep20"].keep_frac))
+    bm, blo, bhi, bn, bsd = baseline(df)
+    fig, ax = plt.subplots(figsize=(6.4, 4.1))
+    ax.axhspan(blo, bhi, color=ps.INK3, alpha=0.12, lw=0)
+    ax.axhline(bm, color=ps.INK2, lw=1.2, ls=(0, (4, 3)))
+    ps.direct_label(ax, fracs[-1] * 100, bm, "все данные", ps.INK2, dx=-2, dy=8, ha="right")
+    for m in ("random", "grand_ep1", "grand_ep20", "el2n_ep20"):
+        c, mk, lab = ps.METHOD_STYLE[m]
+        a = (d[(d.method == m) & (d.keep_frac.isin(fracs))]
+             .groupby("keep_frac").final_test_acc.mean().reset_index())
+        ax.plot(a.keep_frac * 100, a.final_test_acc, color=c, marker=mk, label=lab,
+                mec=ps.SURFACE, mew=0.8)
+    ax.set_xticks([int(f * 100) for f in fracs])
+    ax.set_xlabel("оставлено данных, %")
+    ax.set_ylabel("итоговая test accuracy")
+    ps.title(ax, "Дело в эпохе, а не в скоре",
+             "тот же GraNd, снятый на 1-й и на 20-й эпохе")
+    ax.legend(loc="lower right")
+    ps.finish(fig, FIGS / "02_grand_epoch.png")
+    save_table("grand_epoch", d[d.keep_frac.isin(fracs)]
+               .groupby(["keep_frac", "method"]).final_test_acc.mean().unstack().reset_index())
+
+
 # ---------------------------------------------------------------------------------------
 #  2 — how early can the score be computed
 # ---------------------------------------------------------------------------------------
@@ -219,15 +247,17 @@ def fig_n_models():
     ps.band(ax, k, m - sd, m + sd, ps.AQUA)
     ax.plot(k, m, color=ps.AQUA, marker="^", mec=ps.SURFACE, mew=0.8,
             label=f"среднее по k моделям vs эталон ({n_ref} моделей)")
-    ax.axhline(float(np.mean(pair)), color=ps.VIOLET, lw=1.2, ls=(0, (1, 2)))
-    ps.direct_label(ax, 1, float(np.mean(pair)), "две отдельные модели между собой",
-                    ps.VIOLET, dx=0, dy=-11)
+    pm = float(np.mean(pair))
+    ax.axhline(pm, color=ps.VIOLET, lw=1.2, ls=(0, (1, 2)),
+               label="две отдельные модели между собой")
+    ps.direct_label(ax, 10, pm, f"{pm:.2f}", ps.VIOLET, dx=-4, dy=10, ha="right")
     ax.set_xticks(list(k))
+    ax.set_ylim(pm - 0.07, 1.012)
     ax.set_xlabel("число моделей k, по которым усреднён EL2N")
     ax.set_ylabel("корреляция Спирмена")
     ps.title(ax, "Один скор — это в основном шум инициализации",
-             "EL2N на эпохе 20, CIFAR-10")
-    ax.legend(loc="lower right")
+             "EL2N на эпохе 20; эталон — среднее по всем 10, поэтому при k=10 ровно 1")
+    ax.legend(loc="lower right", framealpha=0)
     ps.finish(fig, FIGS / "04_n_models.png")
     save_table("score_averaging", pd.DataFrame(
         {"k моделей": k, "Спирмен с эталоном": m, "sd": sd}))
@@ -243,31 +273,34 @@ def fig_window(df):
     panels = [("offset", "чистые метки", ps.ORANGE, "s", "full"),
               ("noise10_offset", "10% перемешанных меток", ps.VIOLET, "D", "noise10_full")]
     panels = [p for p in panels if not d[d.group == p[0]].empty]
-    fig, axes = plt.subplots(1, len(panels), figsize=(5.3 * len(panels), 4.1), squeeze=False)
+    fig, axes = plt.subplots(1, len(panels), figsize=(5.6 * len(panels), 4.2), squeeze=False)
     for ax, (g, lab, c, mk, bgroup) in zip(axes[0], panels):
         dd = d[d.group == g]
-        a = agg(dd, "offset").sort_values("offset")
+        a = agg(dd, "offset").sort_values("offset").reset_index(drop=True)
         size = int(dd.subset_size.iloc[0])
-        b = baseline(df, bgroup)
+        x = np.arange(len(a))                      # categorical: the offsets are a sweep,
+        b = baseline(df, bgroup)                   # not a quantitative axis
         if b:
             ax.axhline(b[0], color=ps.INK2, lw=1.2, ls=(0, (4, 3)))
-            ps.direct_label(ax, a.offset.iloc[0], b[0], "все данные", ps.INK2, dx=0, dy=8)
+            ps.direct_label(ax, x[0], b[0], "все данные", ps.INK2, dx=2, dy=9, ha="left")
         if a.n.max() > 1:
-            ps.band(ax, a.offset, a.lo, a.hi, c)
-        ax.plot(a.offset, a["mean"], color=c, marker=mk, mec=ps.SURFACE, mew=0.8)
-        best = a.loc[a["mean"].idxmax()]
-        ax.scatter([best.offset], [best["mean"]], s=90, facecolor="none", edgecolor=c, lw=1.6,
-                   zorder=4)
-        ps.direct_label(ax, best.offset, best["mean"],
-                        f"оптимум: выбросить {int(best.offset)}", c, dx=8, dy=9)
-        ax.set_xscale("symlog", linthresh=250)
-        ax.set_xticks(list(a.offset))
-        ax.set_xticklabels([str(int(o)) for o in a.offset], rotation=45)
-        ax.minorticks_off()
+            ps.band(ax, x, a.lo, a.hi, c)
+        ax.plot(x, a["mean"], color=c, marker=mk, mec=ps.SURFACE, mew=0.8)
+        best = int(a["mean"].idxmax())
+        ax.scatter([x[best]], [a["mean"].iloc[best]], s=95, facecolor="none", edgecolor=c,
+                   lw=1.7, zorder=4)
+        ps.direct_label(ax, x[best], a["mean"].iloc[best],
+                        f"лучшее окно:\nвыбросить {int(a.offset.iloc[best])}", c,
+                        dx=0 if best < len(a) - 2 else -10, dy=-34,
+                        ha="center" if best < len(a) - 2 else "right")
+        ax.set_xticks(x, [str(int(o)) for o in a.offset], fontsize=8.5)
         ax.set_xlabel("выброшено примеров с наибольшим EL2N")
-        ps.title(ax, lab, f"окно из {size} примеров ({size/500:.0f}% CIFAR-10), EL2N эпоха 10")
-        save_table(f"window_{g}", a)
+        ax.set_xlim(-0.4, len(a) - 0.6)
+        ps.title(ax, lab, f"окно из {size} примеров ({size/500:.0f}% CIFAR-10), EL2N эпоха 10, "
+                          f"{int(a.n.max())} сид(ов)")
+        save_table(f"window_{g}", a.drop(columns=["n"]) if a.n.max() == 1 else a)
     axes[0][0].set_ylabel("итоговая test accuracy")
+    fig.subplots_adjust(wspace=0.22)
     ps.finish(fig, FIGS / "05_window.png")
 
 
@@ -310,22 +343,27 @@ def fig_noise_prune(df):
 #  6 — score distributions
 # ---------------------------------------------------------------------------------------
 def fig_score_dists():
-    eps = [e for e in (1, 2, 5, 10, 20, 50, 100, 200) if score_path(f"el2n_ep{e}")]
+    eps = [e for e in (1, 5, 10, 20, 50, 100, 200) if score_path(f"el2n_ep{e}")][:5]
     if len(eps) < 2:
         return
-    fig, axes = plt.subplots(1, len(eps), figsize=(1.95 * len(eps), 2.7), sharey=True)
+    fig, axes = plt.subplots(1, len(eps), figsize=(2.5 * len(eps), 3.1), sharey=True,
+                             layout="constrained")
     axes = np.atleast_1d(axes)
     for ax, e in zip(axes, eps):
         s = load_score(f"el2n_ep{e}")
-        ax.hist(s, bins=60, color=ps.ORANGE, alpha=0.85, lw=0)
-        ax.set_title(f"эпоха {e}", loc="left", fontsize=9, color=ps.INK)
+        ax.hist(s, bins=70, color=ps.ORANGE, alpha=0.9, lw=0)
+        frac0 = float((s < 0.05).mean())
+        ax.set_title(f"эпоха {e}", loc="left", fontsize=9.5, color=ps.INK)
+        ax.text(0.97, 0.93, f"{frac0*100:.0f}% почти\nвыучено", transform=ax.transAxes,
+                ha="right", va="top", fontsize=8, color=ps.INK3)
         ax.set_xlabel("EL2N")
         ax.set_xlim(0, 1.45)
-    axes[0].set_ylabel("число примеров")
-    fig.suptitle(f"Распределение EL2N (усреднён по {n_models_of('el2n_ep20')} моделям) "
-                 f"по ходу обучения", x=0.0, ha="left", fontsize=10.5,
-                 fontweight="bold", color=ps.INK)
-    fig.tight_layout()
+        ax.set_yscale("log")
+        ax.set_ylim(1, 6e4)
+    axes[0].set_ylabel("число примеров (log)")
+    fig.suptitle(f"Распределение EL2N (среднее по {n_models_of('el2n_ep20')} моделям): "
+                 f"масса уезжает к нулю, хвост остаётся",
+                 x=0.0, ha="left", fontsize=10.5, fontweight="semibold", color=ps.INK)
     ps.finish(fig, FIGS / "07_score_distributions.png")
 
 
@@ -352,8 +390,8 @@ def fig_score_corr():
             mats.append(s)
     M = np.array([[spearman(a, b) for b in mats] for a in mats])
 
-    fig, axes = plt.subplots(1, 3, figsize=(14.2, 4.1),
-                             gridspec_kw=dict(width_ratios=[1, 1, 1.15]))
+    fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.3), layout="constrained",
+                             gridspec_kw=dict(width_ratios=[1, 1, 1.25]))
     ax = axes[0]
     ax.plot(eps, corr, color=ps.ORANGE, marker="s", mec=ps.SURFACE, mew=0.8)
     ax.set_xscale("log")
@@ -362,18 +400,18 @@ def fig_score_corr():
     ax.minorticks_off()
     ax.set_xlabel("эпоха, на которой посчитан EL2N")
     ax.set_ylabel("корреляция Спирмена с forgetting")
-    ps.title(ax, "EL2N быстро догоняет forgetting",
-             "forgetting считается за всё обучение целиком")
+    ps.title(ax, "Скор информативен рано — и выдыхается к концу",
+             "согласие с forgetting, который считается за всё обучение целиком")
 
     ax = axes[1]
     e20 = load_score("el2n_ep20")
     m = np.isfinite(ref)
-    hb = ax.hexbin(e20[m], ref[m], gridsize=45, cmap="Blues", bins="log", mincnt=1, lw=0)
-    fig.colorbar(hb, ax=ax, label="примеров (log)")
+    ax.hexbin(e20[m], ref[m], gridsize=45, cmap="Blues", bins="log", mincnt=1, lw=0)
     ax.grid(False)
     ax.set_xlabel("EL2N, эпоха 20")
     ax.set_ylabel("число забываний за обучение")
-    ps.title(ax, f"Спирмен = {spearman(e20, ref):.2f}", "точка — пример CIFAR-10")
+    ps.title(ax, f"Спирмен = {spearman(e20, ref):.2f}",
+             "плотность примеров CIFAR-10, темнее — больше")
 
     ax = axes[2]
     im = ax.imshow(M, cmap="Blues", vmin=0, vmax=1)
@@ -384,8 +422,8 @@ def fig_score_corr():
         for j in range(len(names)):
             ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=7,
                     color=ps.SURFACE if M[i, j] > 0.6 else ps.INK)
-    fig.colorbar(im, ax=ax, label="Спирмен")
-    ps.title(ax, "Все скоры ранжируют почти одинаково")
+    fig.colorbar(im, ax=ax, label="Спирмен", shrink=0.85)
+    ps.title(ax, "Скоры ранжируют похоже", "ранговая корреляция между скорами")
     ps.finish(fig, FIGS / "08_score_correlation.png")
     save_table("el2n_vs_forget", pd.DataFrame({"эпоха EL2N": eps,
                                                "Спирмен с forgetting": corr}))
@@ -484,13 +522,18 @@ def fig_curves():
         m = pd.read_csv(RUNS / p / "metrics.csv")
         axes[0].plot(m.epoch, m.test_acc, color=c, lw=1.4, ls=st, label=lab)
         axes[1].plot(m.epoch, m.train_acc, color=c, lw=1.4, ls=st, label=lab)
-    for ax, t, yl in ((axes[0], "Test accuracy", "test accuracy"),
-                      (axes[1], "Train accuracy (на своём подмножестве)", "train accuracy")):
+    for ax, t, yl, sub in (
+            (axes[0], "Test accuracy", "test accuracy",
+             "у всех запусков одинаковое число шагов и одно lr-расписание"),
+            (axes[1], "Train accuracy на своём подмножестве", "train accuracy",
+             "каждое подмножество выучивается до нуля ошибок — дело не в недообучении")):
         ax.set_xlabel("номинальная эпоха (шаг / 390)")
         ax.set_ylabel(yl)
-        ps.title(ax, t, "у всех запусков одинаковое число шагов и одно lr-расписание")
-    axes[0].set_ylim(0.4, 0.97)
-    axes[0].legend(loc="lower right")
+        ps.title(ax, t, sub)
+    axes[0].set_ylim(0.38, 0.98)
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", ncols=len(l), bbox_to_anchor=(0.5, -0.06),
+               frameon=False, fontsize=9)
     ps.finish(fig, FIGS / "11_training_curves.png")
 
 
@@ -498,46 +541,62 @@ def fig_curves():
 #  11 — the two protocol controls
 # ---------------------------------------------------------------------------------------
 def fig_controls(df):
+    """Bars show the DIFFERENCE from training on all data: that quantity has a true zero,
+    so the bar lengths are honest (accuracies themselves would need a truncated axis)."""
     rows = []
-    for prefix, lab in (("main", "наш протокол (100 эпох, bf16)"),
-                        ("verify200", "200 эпох, как в статье"),
+    for prefix, lab in (("main", "100 эпох, bf16\n(наш протокол)"),
+                        ("verify200", "200 эпох, bf16\n(расписание статьи)"),
                         ("fp32", "100 эпох, fp32")):
         sub = df[df.prefix == prefix]
         if sub.empty:
             continue
         full = sub[sub.kind == "full"]["final_test_acc"]
+        if not len(full):
+            continue
         pr = sub[(sub.kind == "prune") & (sub.keep_frac == 0.5)]
-        for meth in ("full", "random", "el2n_ep20"):
-            v = full if meth == "full" else pr[pr.method == meth]["final_test_acc"]
-            if len(v):
-                rows.append(dict(protocol=lab, method=meth, acc=v.mean(), n=len(v)))
-    if len({r["protocol"] for r in rows}) < 2:
+        r = dict(protocol=lab, full=full.mean(), n_full=len(full))
+        for meth in ("random", "el2n_ep20"):
+            v = pr[pr.method == meth]["final_test_acc"]
+            r[meth] = v.mean() - full.mean() if len(v) else np.nan
+        rows.append(r)
+    if len(rows) < 2:
         return
     t = pd.DataFrame(rows)
-    piv = t.pivot(index="protocol", columns="method", values="acc")
-    order = [p for p in ("наш протокол (100 эпох, bf16)", "200 эпох, как в статье",
-                         "100 эпох, fp32") if p in piv.index]
-    piv = piv.loc[order]
-    fig, ax = plt.subplots(figsize=(7.4, 4.0))
-    w, xs = 0.26, np.arange(len(piv))
-    for i, (meth, lab) in enumerate((("full", "все данные"), ("random", "случайные 50%"),
+
+    fig, ax = plt.subplots(figsize=(7.6, 4.2))
+    xs = np.arange(len(t))
+    w = 0.3
+    for i, (meth, lab) in enumerate((("random", "случайные 50%"),
                                      ("el2n_ep20", "EL2N 50%"))):
-        if meth not in piv:
-            continue
-        c = ps.METHOD_STYLE[meth if meth != "full" else "full"][0]
-        v = piv[meth].values
-        ax.bar(xs + (i - 1) * w, v, w * 0.92, color=c, label=lab)
-        for x, y in zip(xs + (i - 1) * w, v):
+        c = ps.METHOD_STYLE[meth][0]
+        v = t[meth].values * 100
+        ax.bar(xs + (i - 0.5) * (w + 0.02), v, w, color=c, label=lab)
+        for x, y in zip(xs + (i - 0.5) * (w + 0.02), v):
             if np.isfinite(y):
-                ax.text(x, y + 0.0015, f"{y:.4f}", ha="center", fontsize=7.5, color=ps.INK2)
-    ax.set_xticks(xs, piv.index, fontsize=8.5)
-    ax.set_ylim(min(0.9, float(np.nanmin(piv.values)) - 0.01), float(np.nanmax(piv.values)) + 0.008)
-    ax.set_ylabel("итоговая test accuracy")
-    ps.title(ax, "Контроль: вывод не зависит от сокращённого расписания и bf16",
-             "одно и то же сравнение при разных протоколах обучения")
-    ax.legend(loc="lower right", ncols=3)
-    ps.finish(fig, FIGS / "12_controls.png")
-    save_table("controls", piv.reset_index())
+                ax.text(x, y + (0.07 if y >= 0 else -0.07), f"{y:+.2f}", ha="center",
+                        va="bottom" if y >= 0 else "top", fontsize=8.5, color=ps.INK2)
+    ax.axhline(0, color=ps.INK2, lw=1.2)
+    labels = [f"{p}\nвсе данные {f:.4f}" + (f" ({n} зап.)" if n > 1 else "")
+              for p, f, n in zip(t.protocol, t.full, t.n_full)]
+    ax.set_xticks(xs, labels, fontsize=8.5)
+    lo, hi = np.nanmin(t[["random", "el2n_ep20"]].values) * 100, \
+        np.nanmax(t[["random", "el2n_ep20"]].values) * 100
+    ax.set_ylim(lo - 0.55, max(hi, 0) + 0.75)
+    ax.set_ylabel("разница с обучением на полных данных, п.п.")
+    ps.title(ax, "Контроль: вывод не создан отличиями протокола",
+             "на расписании статьи эффект EL2N сильнее; в fp32 — в пределах шума по сидам")
+    ax.legend(loc="lower left", ncols=2)
+    ps.finish(fig, FIGS / "12_controls.png",
+              note="Контрольные протоколы — по одному запуску на точку; шум по сидам на "
+                   "базовой линии 0.19 п.п., поэтому разницы такого порядка между "
+                   "протоколами этими данными не разрешаются.")
+    out = t.copy()
+    out["random"] = out.random * 100
+    out["el2n_ep20"] = out.el2n_ep20 * 100
+    out["protocol"] = out.protocol.str.replace("\n", " ")
+    save_table("controls", out.rename(columns={
+        "protocol": "протокол", "full": "все данные", "n_full": "запусков базы",
+        "random": "случайные 50%, п.п.", "el2n_ep20": "EL2N 50%, п.п."}))
 
 
 def main():
@@ -555,7 +614,8 @@ def main():
     csv = root / "summary.csv"
     df = pd.read_csv(csv) if csv.exists() else pd.DataFrame(
         columns=["group", "method", "prefix", "kind", "keep_frac"])
-    jobs = [("prune", lambda: fig_prune(df)), ("score_epoch", lambda: fig_score_epoch(df)),
+    jobs = [("prune", lambda: fig_prune(df)),
+            ("grand_epoch", lambda: fig_grand_epoch(df)), ("score_epoch", lambda: fig_score_epoch(df)),
             ("n_models", fig_n_models), ("window", lambda: fig_window(df)),
             ("noise_prune", lambda: fig_noise_prune(df)), ("score_dists", fig_score_dists),
             ("score_corr", fig_score_corr), ("noise_detect", fig_noise_detection),

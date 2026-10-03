@@ -6,4 +6,4 @@ results/logs/
 results/runs/**/subset_idx.npy
 results/runs/**/scores/*.npy
 results/runs/**/final.pt
-results/sweep.log
+results/sweep*.log

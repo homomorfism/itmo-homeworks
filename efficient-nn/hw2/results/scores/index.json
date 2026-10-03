@@ -1,0 +1,7 @@
+{
+  "el2n_ep20": "/root/CurrentProjects/itmo-homeworks/efficient-nn/hw2/results/scores/el2n_ep20_mean10.npy",
+  "el2n_ep10": "/root/CurrentProjects/itmo-homeworks/efficient-nn/hw2/results/scores/el2n_ep10_mean10.npy",
+  "grand_ep1": "/root/CurrentProjects/itmo-homeworks/efficient-nn/hw2/results/scores/grand_ep1_mean10.npy",
+  "grand_ep20": "/root/CurrentProjects/itmo-homeworks/efficient-nn/hw2/results/scores/grand_ep20_mean10.npy",
+  "forget_full": "/root/CurrentProjects/itmo-homeworks/efficient-nn/hw2/results/scores/forget_ep100_mean6.npy"
+}

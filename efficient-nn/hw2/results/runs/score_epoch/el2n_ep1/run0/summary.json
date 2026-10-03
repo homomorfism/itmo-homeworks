@@ -1,0 +1,9 @@
+{
+  "name": "score_epoch/el2n_ep1/run0",
+  "n_train": 25000,
+  "num_params": 11173962,
+  "final_test_acc": 0.9191,
+  "best_test_acc": 0.9205,
+  "final_train_acc": 0.9999398589134216,
+  "wall_minutes": 8.766697736581166
+}

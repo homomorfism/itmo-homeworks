@@ -1,0 +1,9 @@
+{
+  "name": "verify200/el2n_ep20/keep050/run0",
+  "n_train": 25000,
+  "num_params": 11173962,
+  "final_test_acc": 0.9534,
+  "best_test_acc": 0.9536,
+  "final_train_acc": 0.9999919533729553,
+  "wall_minutes": 17.243426128228506
+}

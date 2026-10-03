@@ -1,0 +1,9 @@
+{
+  "name": "noise10/full/run0",
+  "n_train": 50000,
+  "num_params": 11173962,
+  "final_test_acc": 0.8985,
+  "best_test_acc": 0.9068,
+  "final_train_acc": 0.9963541030883789,
+  "wall_minutes": 8.937656899293264
+}

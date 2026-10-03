@@ -1,0 +1,9 @@
+{
+  "name": "noise10/prune/random/keep020/run0",
+  "n_train": 10000,
+  "num_params": 11173962,
+  "final_test_acc": 0.8272,
+  "best_test_acc": 0.8275,
+  "final_train_acc": 0.9999919533729553,
+  "wall_minutes": 8.762193302313486
+}

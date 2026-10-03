@@ -1,0 +1,9 @@
+{
+  "name": "scores/run9",
+  "n_train": 50000,
+  "num_params": 11173962,
+  "final_test_acc": 0.8069,
+  "best_test_acc": 0.8479,
+  "final_train_acc": 0.8658974170684814,
+  "wall_minutes": 3.6777126669883726
+}
