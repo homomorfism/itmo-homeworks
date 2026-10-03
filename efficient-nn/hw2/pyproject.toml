@@ -1,0 +1,26 @@
+[project]
+name = "data-diet-torch"
+version = "0.1.0"
+description = "PyTorch reproduction of 'Deep Learning on a Data Diet' (Paul, Ganguli, Dziugaite, NeurIPS 2021)"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.6",
+    "torchvision",
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+    "tqdm",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
