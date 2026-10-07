@@ -1,0 +1,9 @@
+{
+  "name": "prune/el2n_ep20/keep030/run0",
+  "n_train": 15000,
+  "num_params": 11220132,
+  "final_test_acc": 0.3182,
+  "best_test_acc": 0.3201,
+  "final_train_acc": 0.9997435808181763,
+  "wall_minutes": 40.39229550361633
+}

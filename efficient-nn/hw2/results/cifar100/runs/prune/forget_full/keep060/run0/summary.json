@@ -1,0 +1,9 @@
+{
+  "name": "prune/forget_full/keep060/run0",
+  "n_train": 30000,
+  "num_params": 11220132,
+  "final_test_acc": 0.7393,
+  "best_test_acc": 0.7401,
+  "final_train_acc": 0.9995833039283752,
+  "wall_minutes": 41.12805550098419
+}
