@@ -1,0 +1,9 @@
+{
+  "name": "prune/grand_ep1/keep080/run0",
+  "n_train": 40000,
+  "num_params": 11220132,
+  "final_test_acc": 0.7447,
+  "best_test_acc": 0.7447,
+  "final_train_acc": 0.9997795820236206,
+  "wall_minutes": 15.304628268877666
+}

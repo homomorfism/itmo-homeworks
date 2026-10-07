@@ -7,3 +7,10 @@ results/runs/**/subset_idx.npy
 results/runs/**/scores/*.npy
 results/runs/**/final.pt
 results/sweep*.log
+# CIFAR-100 campaign (results/cifar100/): keep metadata + mean scores + figure, drop the
+# large regenerable per-run arrays, shard logs and the campaign log (mirrors the rules above)
+results/*_campaign.log
+results/cifar100/logs/
+results/cifar100/runs/**/subset_idx.npy
+results/cifar100/runs/**/scores/*.npy
+results/cifar100/runs/**/final.pt

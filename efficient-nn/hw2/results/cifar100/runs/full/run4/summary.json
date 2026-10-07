@@ -1,0 +1,9 @@
+{
+  "name": "full/run4",
+  "n_train": 50000,
+  "num_params": 11220132,
+  "final_test_acc": 0.7743,
+  "best_test_acc": 0.7754,
+  "final_train_acc": 0.9995793700218201,
+  "wall_minutes": 16.258010884126026
+}
