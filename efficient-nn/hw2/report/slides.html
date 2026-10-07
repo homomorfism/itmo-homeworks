@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep Learning on a Data Diet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@500;600&display=swap" rel="stylesheet">
+<!--
+  Разбор статьи на ~15 минут. Открыть локально из клона репозитория (рисунки берутся из
+  ../results/figures/). Управление: ← → / пробел / клик — слайды, N — заметки докладчика,
+  F — полный экран. Печать в PDF: Ctrl+P, по слайду на страницу.
+-->
+<style>
+:root {
+  --dark: #16212E; --light: #FBFAF7; --alt: #F1EEE8; --line: #E3E0D8;
+  --blue: #2A78D6; --orange: #EB6834; --green: #1AA37A; --purple: #4B3BA8;
+  --muted: #4A5568; --faint: #8B98A6;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'IBM Plex Sans', Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #0E151D; overflow: hidden; }
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: center; }
+section {
+  position: absolute; inset: 0; display: none; flex-direction: column; gap: 32px;
+  padding: 112px 128px 150px; background: var(--light); color: var(--dark);
+  font-family: var(--sans); font-size: 32px; line-height: 1.4;
+}
+section.active { display: flex; }
+section.dark { background: var(--dark); color: var(--light); }
+h1 { font-family: var(--serif); font-size: 92px; font-weight: 600; line-height: 1.05; }
+h2 { font-family: var(--serif); font-size: 60px; font-weight: 600; line-height: 1.1; }
+.kicker { font-size: 26px; letter-spacing: .12em; text-transform: uppercase; color: var(--orange); font-weight: 600; }
+.sub { font-size: 30px; color: var(--muted); max-width: 1560px; }
+.dark .sub { color: #B8C2CE; }
+ul { list-style: none; display: flex; flex-direction: column; gap: 22px; }
+li { padding-left: 40px; position: relative; }
+li::before { content: ""; position: absolute; left: 0; top: .62em; width: 16px; height: 16px; border-radius: 4px; background: var(--orange); }
+b, strong { font-weight: 600; }
+.take { background: var(--alt); border-left: 8px solid var(--orange); padding: 26px 32px; border-radius: 10px; font-size: 31px; }
+.dark .take { background: #223142; }
+.fig { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; object-fit: contain; width: 100%; min-height: 0; flex: 1; }
+.formula { height: 104px; object-fit: contain; object-position: left; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; min-height: 0; }
+.cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 14px; }
+.card h3 { font-size: 34px; font-weight: 600; }
+.card p { font-size: 28px; color: var(--muted); }
+.card .n { font-family: var(--serif); font-size: 64px; font-weight: 600; color: var(--orange); line-height: 1; }
+.pipe { display: flex; align-items: stretch; gap: 20px; }
+.pipe .step { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; font-size: 28px; }
+.pipe .step b { display: block; font-size: 32px; margin-bottom: 8px; color: var(--blue); }
+.pipe .arr { align-self: center; font-size: 48px; color: var(--faint); }
+.foot { position: absolute; left: 128px; right: 128px; bottom: 56px; display: flex; justify-content: space-between; font-size: 22px; color: var(--faint); }
+aside { display: none; }
+body.notes aside {
+  display: block; position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 128px;
+  background: #FFF6D6; color: #3B3320; font-size: 26px; line-height: 1.4; border-top: 2px solid #E8D58A; z-index: 2;
+}
+#count { position: fixed; right: 16px; bottom: 12px; color: #8B98A6; font: 14px var(--sans); }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  html, body { overflow: visible; background: none; }
+  #stage { position: static; transform: none !important; height: auto; }
+  section { display: flex !important; position: relative; height: 1080px; page-break-after: always; break-after: page; }
+  aside, #count { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 -->
+<section class="dark" style="justify-content:center;gap:40px">
+  <div class="kicker">Разбор статьи · NeurIPS 2021</div>
+  <h1>Deep Learning on a Data Diet</h1>
+  <p class="sub" style="font-size:40px">Finding Important Examples Early in Training</p>
+  <p class="sub">Mansheej Paul, Surya Ganguli, Gintare Karolina Dziugaite · arXiv:2107.07075</p>
+  <p class="take" style="max-width:1400px">Можно ли ещё <b>до основного обучения</b> понять, какие примеры обучающей выборки нужны, а какие можно выбросить?</p>
+  <aside>~30 с. Статья о прунинге данных, а не весов: убираем примеры из обучающей выборки. Главный вопрос — можно ли найти важные примеры дёшево, в самом начале обучения.</aside>
+</section>
+
+<!-- 2 -->
+<section>
+  <div class="kicker">Мотивация</div>
+  <h2>Данные избыточны, но какие именно?</h2>
+  <ul>
+    <li>Качество растёт с объёмом данных, но <b>не все примеры одинаково полезны</b>: многие сеть выучивает за пару эпох и больше на них не ошибается.</li>
+    <li>Известный способ найти «бесполезные» примеры — <b>forgetting score</b> (Toneva et al., 2019): сколько раз пример был выучен, а потом забыт. Но его нужно считать <b>по всему обучению</b>.</li>
+    <li>Если ради отбора данных нужно сначала полностью обучиться — выигрыша мало.</li>
+  </ul>
+  <p class="take">Вопрос статьи: есть ли скор, который <b>посчитан в самом начале обучения</b> (или вообще при инициализации), а работает не хуже forgetting?</p>
+  <aside>~1 мин. Подчеркнуть: отбор данных полезен, только если он дешевле, чем само обучение. Forgetting — сильный бейзлайн, но дорогой.</aside>
+</section>
+
+<!-- 3 -->
+<section>
+  <div class="kicker">Постановка</div>
+  <h2>Протокол прунинга данных</h2>
+  <div class="pipe">
+    <div class="step"><b>1. Скор</b>Для каждого примера считаем «важность» на рано остановленных моделях</div>
+    <div class="arr">→</div>
+    <div class="step"><b>2. Сортировка</b>Ранжируем все 50 000 примеров CIFAR-10 по скору</div>
+    <div class="arr">→</div>
+    <div class="step"><b>3. Отбор</b>Оставляем k% примеров <b>с наибольшим</b> скором</div>
+    <div class="arr">→</div>
+    <div class="step"><b>4. Обучение</b>Новую сеть учим с нуля только на этом подмножестве</div>
+  </div>
+  <ul>
+    <li>Качество оцениваем по <b>test accuracy</b> и сравниваем с обучением на всех данных и со <b>случайным</b> подмножеством той же доли.</li>
+    <li>Деталь: число шагов SGD одинаково при любой доле — на подмножестве каждый пример просто видится чаще.</li>
+  </ul>
+  <aside>~1 мин. Ключевое: «важные» = с высоким скором, их и оставляем. Случайный отбор — главный бейзлайн. Число шагов фиксировано, поэтому сравнение честное по бюджету оптимизации.</aside>
+</section>
+
+<!-- 4 -->
+<section>
+  <div class="kicker">Скор 1</div>
+  <h2>GraNd: насколько сильно пример двигает веса</h2>
+  <img class="formula" src="../results/figures/formulas/grand.png" alt="GraNd: математическое ожидание по инициализации нормы градиента лосса по весам">
+  <ul>
+    <li><b>Идея:</b> за один шаг SGD изменение лосса на любом другом примере ограничено сверху суммой норм градиентов обучающих примеров. Пример с маленьким градиентом почти ни на что не влияет — его можно убрать.</li>
+    <li>Математическое ожидание — <b>по случайной инициализации</b> весов: на практике среднее по нескольким независимым сетям.</li>
+    <li>Считается уже <b>при инициализации</b> или через несколько эпох. Минус — нужны per-sample градиенты по всем параметрам, это дорого.</li>
+  </ul>
+  <aside>~1.5 мин. Интуиция: вклад примера в динамику обучения = норма его градиента. Ожидание по инициализации важно — одна сеть даёт шумный рейтинг.</aside>
+</section>
+
+<!-- 5 -->
+<section>
+  <div class="kicker">Скор 2</div>
+  <h2>EL2N: та же идея, но за один прямой проход</h2>
+  <div class="cols" style="grid-template-columns:1.05fr 1fr;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <p style="color:var(--muted);font-size:28px">Градиент по весам раскладывается через логиты (ψ — якобиан логитов по весам):</p>
+      <img class="formula" style="height:130px" src="../results/figures/formulas/lemma.png" alt="градиент по весам равен сумме по логитам: градиент по логиту, умноженный на якобиан логита по весам">
+      <p style="color:var(--muted);font-size:28px">а для кросс-энтропии градиент по логитам — это просто ошибка предсказания:</p>
+      <img class="formula" style="height:80px" src="../results/figures/formulas/logit_grad.png" alt="градиент по логитам равен p минус y">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <p>Если якобианы ψ у разных примеров похожи, норму градиента определяет <b>ошибка p − y</b>. Отсюда:</p>
+      <img class="formula" style="height:90px" src="../results/figures/formulas/el2n.png" alt="EL2N: матожидание нормы разности softmax и one-hot метки">
+      <p class="take">EL2N = насколько далеко предсказание от правильной метки. Один forward-проход, в ~14 раз дешевле GraNd.</p>
+    </div>
+  </div>
+  <aside>~1.5 мин. EL2N — это «error L2-norm». Приближение работает, когда ошибка уже различается между примерами, то есть после нескольких эпох обучения, а не при инициализации.</aside>
+</section>
+
+<!-- 6 -->
+<section>
+  <div class="kicker">Два ключевых условия</div>
+  <h2>Рано — но не слишком, и по нескольким сетям</h2>
+  <div class="cols3" style="grid-template-columns:1fr 1fr">
+    <div class="card">
+      <div class="n">~10–20 эпох</div>
+      <h3>из 200 — достаточно</h3>
+      <p>EL2N, посчитанный уже через несколько эпох, ранжирует примеры почти так же хорошо, как forgetting по всему обучению. В самом конце обучения скор вырождается: сеть выучивает трейн и ошибка у всех ≈ 0.</p>
+    </div>
+    <div class="card">
+      <div class="n">~10 сетей</div>
+      <h3>усреднение по инициализациям</h3>
+      <p>Рейтинг от одной сети шумный: у двух независимых ResNet-18 ранговая корреляция EL2N всего ≈ 0.6. Среднее по нескольким сетям даёт устойчивый рейтинг.</p>
+    </div>
+  </div>
+  <p class="take">Итоговая стоимость отбора: несколько коротких обучений. Это заметно меньше, чем одно полное, — и меньше, чем нужно для forgetting.</p>
+  <aside>~1 мин. Цифры ρ≈0.6 и 10 сетей — из нашего воспроизведения, совпадают с порядком величин в статье.</aside>
+</section>
+
+<!-- 7 -->
+<section>
+  <div class="kicker">Интуиция</div>
+  <h2>Какие примеры скор считает важными</h2>
+  <img class="fig" src="../results/figures/10_examples.png" alt="CIFAR-10: слева примеры с наименьшим EL2N — типичные центрированные объекты; справа с наибольшим — необычные ракурсы, перекрытия, спорные метки">
+  <p class="take">Слева — «скучные» типичные примеры: сеть выучивает их сразу, они дублируют друг друга. Справа — нетипичные ракурсы, перекрытия и <b>ошибки разметки</b>.</p>
+  <aside>~1 мин. Наше воспроизведение, EL2N на 20-й эпохе. Обратить внимание на правую часть: часть «сложных» примеров — просто неверно размеченные. Это понадобится через два слайда.</aside>
+</section>
+
+<!-- 8 -->
+<section>
+  <div class="kicker">Главный результат</div>
+  <h2>Половину CIFAR-10 можно выбросить без потери качества</h2>
+  <img class="fig" src="../results/figures/01_prune_cifar10.png" alt="Test accuracy от доли оставленных данных для Random, EL2N, GraNd и Forgetting на CIFAR-10">
+  <p class="take">EL2N 50% данных: <b>94.7%</b> — как на всех данных (94.7%), тогда как случайные 50% дают <b>92.4%</b>. EL2N почти догоняет forgetting, но считается за 20 эпох, а не за всё обучение.</p>
+  <aside>~1.5 мин. Числа из нашего воспроизведения (ResNet-18, CIFAR-10), в статье картина та же. Обратить внимание на левую часть графика: при 10–20% данных отбор «самых сложных» катастрофически хуже случайного — это следующий слайд.</aside>
+</section>
+
+<!-- 9 -->
+<section>
+  <div class="kicker">Тонкость</div>
+  <h2>«Только самые сложные» — плохая стратегия</h2>
+  <div class="cols" style="grid-template-columns:1fr 1.25fr;align-items:start">
+    <ul style="font-size:29px;gap:18px">
+      <li>При малой доле данных подмножество из одних сложных примеров <b>не описывает распределение</b>: на 10% данных EL2N даёт 32% против 83% у случайного отбора.</li>
+      <li>Статья проверяет это <b>скользящим окном</b>: берём фиксированное число примеров, но сначала выбрасываем самые-самые верхние по рейтингу.</li>
+      <li>Чем меньше оставляем данных, тем больше верхушки выгодно отрезать.</li>
+    </ul>
+    <img class="fig" style="height:auto;flex:none" src="../results/figures/05_window.png" alt="Скользящее окно: test accuracy от числа выброшенных примеров с наибольшим EL2N, на чистых и зашумлённых метках">
+  </div>
+  <p class="take">Важное — не «самое сложное», а «сложное, но выучиваемое». Самая верхушка рейтинга — это часто шум.</p>
+  <aside>~1.5 мин. Справа рисунок из воспроизведения: окно 20 000 примеров. На чистых метках выигрыш от отрезания верхушки маленький, при шуме — огромный.</aside>
+</section>
+
+<!-- 10 -->
+<section>
+  <div class="kicker">Шум в метках</div>
+  <h2>Верхушка рейтинга — это битые метки</h2>
+  <div class="cols" style="grid-template-columns:1.3fr 1fr;align-items:start">
+    <img class="fig" style="height:auto;flex:none" src="../results/figures/09_noise_detection.png" alt="Распределение EL2N у чистых и испорченных примеров при 10% перемешанных меток">
+    <ul style="font-size:29px;gap:18px">
+      <li>Перемешаем 10% меток CIFAR-10. Испорченные примеры получают <b>самый высокий EL2N</b>: среди тысячи верхних 99% — с битой меткой.</li>
+      <li>Наивный прунинг «оставить верхушку» здесь оставляет мусор и <b>проигрывает случайному</b>.</li>
+      <li>Но если отрезать верхушку, ~40% данных дают <b>больше</b>, чем все шумные данные.</li>
+    </ul>
+  </div>
+  <p class="take">Тот же скор — бесплатный детектор ошибок разметки. Прунинг при шуме не просто экономит данные, а улучшает качество.</p>
+  <aside>~1 мин. Числа из воспроизведения: 92.6% на правильно выбранных 20 000 примерах против 89.9% на всех 50 000 шумных.</aside>
+</section>
+
+<!-- 11 -->
+<section>
+  <div class="kicker">Почему это работает</div>
+  <h2>Связь с динамикой обучения</h2>
+  <ul>
+    <li>В начале обучения сеть быстро меняется, потом траектория стабилизируется. Статья показывает, что EL2N становится хорошим скором примерно тогда же, когда обучение стабилизируется.</li>
+    <li>Через призму <b>NTK</b> (ядро, задаваемое якобианом сети): примеры с высоким скором сильнее всего вносят вклад в то, как быстро меняется ядро (<b>kernel velocity</b>). Примеры с низким скором на геометрию обучения почти не влияют.</li>
+    <li>Значит, важность примера определяется <b>на ранней фазе</b> — дальше уже видно, какие примеры будут «двигать» обучение.</li>
+  </ul>
+  <p class="take">Простые примеры сеть выучивает сразу и потом их «не слышит». Обучение формируют сложные, но корректные примеры.</p>
+  <aside>~1.5 мин. Это теоретическая часть статьи, в воспроизведении мы её не проверяли — рассказываю по статье. Не углубляться в формулы NTK, достаточно интуиции.</aside>
+</section>
+
+<!-- 12 -->
+<section>
+  <div class="kicker">Ограничения</div>
+  <h2>Где метод не бесплатный</h2>
+  <div class="cols3">
+    <div class="card"><h3>Стоимость скоринга</h3><p>Нужно несколько коротких обучений. Окупается, если подмножество потом используется много раз: подбор гиперпараметров, архитектур, повторные обучения.</p></div>
+    <div class="card"><h3>Зависит от датасета</h3><p>CIFAR-10 сильно избыточен. На более сложных данных (CIFAR-100) безопасно убирается заметно меньшая доля, а при агрессивном прунинге скор уже хуже случайного.</p></div>
+    <div class="card"><h3>Шум и малые доли</h3><p>Оставлять верхушку рейтинга опасно: при шуме и малой доле данных нужно отрезать самые сложные примеры, а сколько — подбирать отдельно.</p></div>
+  </div>
+  <p class="take">В протоколе статьи число шагов фиксировано, то есть экономится не время обучения, а данные. Статья показывает, что информация в выборке сильно избыточна, и даёт дешёвый способ её измерить.</p>
+  <aside>~1 мин. Про CIFAR-100 — наш эксперимент: без потерь срезается ~20–25%, дальше random лучше скоров.</aside>
+</section>
+
+<!-- 13 -->
+<section class="dark">
+  <div class="kicker">Итог</div>
+  <h2>Что унести из статьи</h2>
+  <ul style="font-size:36px;gap:30px">
+    <li><b>Важность примера = величина его градиента</b> (GraNd), а на практике — ошибка предсказания (EL2N).</li>
+    <li>Скор можно посчитать <b>рано</b> (10–20 эпох), но обязательно <b>усреднить</b> по нескольким сетям.</li>
+    <li>По EL2N можно выбросить <b>50% CIFAR-10</b> без потери точности; случайный отбор так не умеет.</li>
+    <li>Самые сложные примеры — часто шум: при малой доле данных и битых метках их нужно <b>отрезать</b>.</li>
+  </ul>
+  <p class="sub" style="margin-top:auto">Воспроизведение на PyTorch и все эксперименты — в отчёте <code>report/REPORT.md</code>.</p>
+  <aside>~30 с. Вопросы.</aside>
+</section>
+
+</div>
+<div id="count"></div>
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('#stage > section'));
+  var stage = document.getElementById('stage'), count = document.getElementById('count');
+  slides.forEach(function (s, i) {
+    if (i === 0) return;
+    var f = document.createElement('div');
+    f.className = 'foot';
+    f.innerHTML = '<span>Paul, Ganguli, Dziugaite · Deep Learning on a Data Diet · NeurIPS 2021</span><span>' + (i + 1) + ' / ' + slides.length + '</span>';
+    s.appendChild(f);
+  });
+  var cur = 0;
+  try { cur = Math.min(slides.length - 1, Math.max(0, parseInt(location.hash.slice(1), 10) - 1 || 0)); } catch (e) {}
+  function show(i) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, j) { s.classList.toggle('active', j === cur); });
+    count.textContent = (cur + 1) + ' / ' + slides.length + '   ·   N — заметки, F — полный экран';
+    history.replaceState(null, '', '#' + (cur + 1));
+  }
+  function fit() {
+    var k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = 'translate(-50%, -50%) scale(' + k + ')';
+  }
+  document.addEventListener('keydown', function (e) {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].indexOf(e.key) >= 0) { e.preventDefault(); show(cur + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].indexOf(e.key) >= 0) { e.preventDefault(); show(cur - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('notes');
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+    }
+  });
+  document.addEventListener('click', function (e) { show(e.clientX < window.innerWidth / 3 ? cur - 1 : cur + 1); });
+  window.addEventListener('resize', fit);
+  fit(); show(cur);
+})();
+</script>
+</body>
+</html>
